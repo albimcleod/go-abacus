@@ -4,13 +4,13 @@ package goabacus
 type InvoiceStatus int
 
 const (
-	//NonConfirmed
+	//NonConfirmed is a
 	NonConfirmed InvoiceStatus = 1 + iota
 
-	//ConfirmedAccept
+	//ConfirmedAccept is a
 	ConfirmedAccept
 
-	//ConfirmedReject
+	//ConfirmedReject is a
 	ConfirmedReject
 )
 
@@ -19,4 +19,10 @@ type Invoice struct {
 	ReferenceID   string `json:"referenceId"`
 	InvoiceNumber string `json:"invoiceNumber"`
 	Status        string `json:"status"`
+}
+
+//Invoices defines a list of invoices from Abacus
+type Invoices struct {
+	Pagination Pagination `json:"pagination"`
+	Invoices   []Invoice  `json:"invoices"`
 }
