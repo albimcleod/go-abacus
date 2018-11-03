@@ -1,5 +1,7 @@
 package goabacus
 
+import "time"
+
 // InvoiceStatus defines the status of an invoice
 type InvoiceStatus int
 
@@ -16,9 +18,12 @@ const (
 
 //Invoice defines an Invoice from Abacus POS
 type Invoice struct {
-	ReferenceID   string `json:"referenceId"`
-	InvoiceNumber string `json:"invoiceNumber"`
-	Status        string `json:"status"`
+	InvoiceNumber      string        `json:"invoiceNumber"`
+	Status             InvoiceStatus `json:"status"`
+	TotalExcludeTax    float64       `json:"totalExcludeTax"`
+	Total              float64       `json:"total"`
+	DiscountExcludeTax float64       `json:"discountExcludeTax"`
+	CreatedAt          time.Time     `json:"createdAt"`
 }
 
 //Invoices defines a list of invoices from Abacus

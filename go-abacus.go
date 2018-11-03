@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -46,13 +47,15 @@ func (v *Abacus) GetInvoices(page int, limit int, lastUpdate time.Time) (*Invoic
 
 	r.Header = http.Header(make(map[string][]string))
 	r.Header.Set("Accept", "application/json")
-	r.Header.Set("Authorization", v.ClientSecret)
+	r.Header.Set("Authorization", fmt.Sprintf("ApiKey %v", v.ClientSecret))
 
 	data := url.Values{}
-	data.Add("limit", "20")
-	data.Add("page", "1")
-	data.Add("lastUpdated", lastUpdate.Format(time.RFC3339))
+	data.Add("limit", strconv.Itoa(limit))
+	data.Add("page", strconv.Itoa(page))
+	data.Add("lastUpdated", lastUpdate.Format("2006-01-02T15:04:05.00Z"))
 	r.URL.RawQuery = data.Encode()
+
+	fmt.Println(r.URL.RawQuery)
 
 	res, err := client.Do(r)
 	if err != nil {
@@ -65,7 +68,7 @@ func (v *Abacus) GetInvoices(page int, limit int, lastUpdate time.Time) (*Invoic
 			return nil, fmt.Errorf("Failed to read Abacus invoices: %v", err)
 		}
 		//test
-		fmt.Println("rawResBody", string(rawResBody))
+		//fmt.Println("rawResBody", string(rawResBody))
 		var resp Invoices
 		err = json.Unmarshal(rawResBody, &resp)
 		if err != nil {
