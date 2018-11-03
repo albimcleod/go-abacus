@@ -1,6 +1,7 @@
 package goabacus
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -33,14 +34,9 @@ func (v *Abacus) GetInvoices(page int, limit int, lastUpdate time.Time) (*Invoic
 	client := &http.Client{}
 	client.CheckRedirect = checkRedirectFunc
 
-	data := url.Values{}
-	data.Add("limit", string(limit))
-	data.Add("page", string(page))
-	data.Add("lastUpdated", lastUpdate.Format(time.RFC3339))
-
 	u, err := url.ParseRequestURI(baseURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to build Abacus invoices: %v", err)
 	}
 
 	u.Path = invoicesURL
@@ -52,25 +48,33 @@ func (v *Abacus) GetInvoices(page int, limit int, lastUpdate time.Time) (*Invoic
 	r.Header.Set("Accept", "application/json")
 	r.Header.Set("Authorization", v.ClientSecret)
 
+	data := url.Values{}
+	data.Add("limit", "20")
+	data.Add("page", "1")
+	data.Add("lastUpdated", lastUpdate.Format(time.RFC3339))
 	r.URL.RawQuery = data.Encode()
-
-	fmt.Println("URL", r.URL.String())
 
 	res, err := client.Do(r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to call Abacus invoices: %v", err)
 	}
 
-	rawResBody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
+	if res.StatusCode == 200 {
+		rawResBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to read Abacus invoices: %v", err)
+		}
+		//test
+		fmt.Println("rawResBody", string(rawResBody))
+		var resp Invoices
+		err = json.Unmarshal(rawResBody, &resp)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to unmarshal Abacus invoices: %v", err)
+		}
+		return &resp, nil
+
 	}
-
-	fmt.Println("rawResBody", string(rawResBody))
-	fmt.Println("urlStr", urlStr)
-
-	return nil, nil
-
+	return nil, fmt.Errorf("Failed to get Abacus invoices: %s", res.Status)
 }
 
 func checkRedirectFunc(req *http.Request, via []*http.Request) error {
