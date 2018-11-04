@@ -23,6 +23,7 @@ type Invoice struct {
 	TotalExcludeTax    float64       `json:"totalExcludeTax"`
 	Total              float64       `json:"total"`
 	DiscountExcludeTax float64       `json:"discountExcludeTax"`
+	DiscountTax        float64       `json:"discountTax"`
 	CreatedAt          time.Time     `json:"createdAt"`
 }
 
