@@ -14,6 +14,7 @@ const (
 	defaultSendTimeout = time.Second * 30
 	baseURL            = "https://api.abacus.co"
 	invoicesURL        = "invoices"
+	productsURL        = "products"
 )
 
 // Abacus The main struct of this package
@@ -78,6 +79,56 @@ func (v *Abacus) GetInvoices(page int, limit int, lastUpdate time.Time) (*Invoic
 
 	}
 	return nil, fmt.Errorf("Failed to get Abacus invoices: %s", res.Status)
+}
+
+// GetProducts will return the products
+func (v *Abacus) GetProducts(page int, limit int, lastUpdate time.Time) (*Products, error) {
+	client := &http.Client{}
+	client.CheckRedirect = checkRedirectFunc
+
+	u, err := url.ParseRequestURI(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to build Abacus invoices: %v", err)
+	}
+
+	u.Path = productsURL
+	urlStr := fmt.Sprintf("%v", u)
+
+	r, err := http.NewRequest("GET", urlStr, nil)
+
+	r.Header = http.Header(make(map[string][]string))
+	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Authorization", fmt.Sprintf("ApiKey %v", v.ClientSecret))
+
+	data := url.Values{}
+	data.Add("limit", strconv.Itoa(limit))
+	data.Add("page", strconv.Itoa(page))
+	data.Add("lastUpdated", lastUpdate.Format("2006-01-02T15:04:05.00Z"))
+	r.URL.RawQuery = data.Encode()
+
+	fmt.Println(r.URL.RawQuery)
+
+	res, err := client.Do(r)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to call Abacus products: %v", err)
+	}
+
+	if res.StatusCode == 200 {
+		rawResBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to read Abacus products: %v", err)
+		}
+		//test
+		//fmt.Println("rawResBody", string(rawResBody))
+		var resp Products
+		err = json.Unmarshal(rawResBody, &resp)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to unmarshal Abacus products: %v", err)
+		}
+		return &resp, nil
+
+	}
+	return nil, fmt.Errorf("Failed to get Abacus products: %s", res.Status)
 }
 
 func checkRedirectFunc(req *http.Request, via []*http.Request) error {
